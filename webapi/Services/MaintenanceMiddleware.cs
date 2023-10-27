@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CopilotChat.WebApi.Controllers;
+using CopilotChat.WebApi.Factories;
 using CopilotChat.WebApi.Hubs;
 using CopilotChat.WebApi.Options;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +20,7 @@ namespace CopilotChat.WebApi.Services;
 public class MaintenanceMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IReadOnlyList<IMaintenanceAction> _actions;
+    private readonly IMaintenanceActionFactory _actionFactory;
     private readonly IOptions<ServiceOptions> _serviceOptions;
     private readonly IHubContext<MessageRelayHub> _messageRelayHubContext;
     private readonly ILogger<MaintenanceMiddleware> _logger;
@@ -28,14 +29,14 @@ public class MaintenanceMiddleware
 
     public MaintenanceMiddleware(
         RequestDelegate next,
-        IReadOnlyList<IMaintenanceAction> actions,
+        IMaintenanceActionFactory maintenanceActionFactory,
         IOptions<ServiceOptions> serviceOptions,
         IHubContext<MessageRelayHub> messageRelayHubContext,
         ILogger<MaintenanceMiddleware> logger)
 
     {
         this._next = next;
-        this._actions = actions;
+        this._actionFactory = maintenanceActionFactory;
         this._serviceOptions = serviceOptions;
         this._messageRelayHubContext = messageRelayHubContext;
         this._logger = logger;
@@ -63,7 +64,9 @@ public class MaintenanceMiddleware
     {
         bool inMaintenance = false;
 
-        foreach (var action in this._actions)
+        var actions = _actionFactory.CreateActions();
+
+        foreach (var action in actions)
         {
             inMaintenance |= await action.InvokeAsync();
         }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using CopilotChat.WebApi.Auth;
+using CopilotChat.WebApi.Factories;
 using CopilotChat.WebApi.Models.Storage;
 using CopilotChat.WebApi.Options;
 using CopilotChat.WebApi.Services;
@@ -139,18 +140,12 @@ public static class CopilotChatServiceExtensions
     internal static IServiceCollection AddMaintenanceServices(this IServiceCollection services)
     {
         // Inject migration services
-        services.AddSingleton<IChatMigrationMonitor, ChatMigrationMonitor>();
-        services.AddSingleton<IChatMemoryMigrationService, ChatMemoryMigrationService>();
+        services.AddTransient<IChatMigrationMonitor, ChatMigrationMonitor>();
+        services.AddTransient<IChatMemoryMigrationService, ChatMemoryMigrationService>();
 
         // Inject actions so they can be part of the action-list.
-        services.AddSingleton<ChatMigrationMaintenanceAction>();
-        services.AddSingleton<IReadOnlyList<IMaintenanceAction>>(
-            sp =>
-                (IReadOnlyList<IMaintenanceAction>)
-                new[]
-                {
-                    sp.GetRequiredService<ChatMigrationMaintenanceAction>(),
-                });
+        services.AddTransient<ChatMigrationMaintenanceAction>();
+        services.AddTransient<IMaintenanceActionFactory, MaintenanceActionFactory>();
 
         return services;
     }
@@ -262,10 +257,10 @@ public static class CopilotChatServiceExtensions
                 chatMemorySourceStorageContext = new MySqlStorageContext<MemorySource>(services.BuildServiceProvider().GetRequiredService<MySqlDbContext>());
                 chatParticipantStorageContext = new MySqlStorageContext<ChatParticipant>(services.BuildServiceProvider().GetRequiredService<MySqlDbContext>());
 
-                services.AddScoped<IStorageContext<ChatSession>, MySqlStorageContext<ChatSession>>();
-                services.AddScoped<IStorageContext<ChatMessage>, MySqlStorageContext<ChatMessage>>();
-                services.AddScoped<IStorageContext<MemorySource>, MySqlStorageContext<MemorySource>>();
-                services.AddScoped<IStorageContext<ChatParticipant>, MySqlStorageContext<ChatParticipant>>();
+                services.AddTransient<IStorageContext<ChatSession>, MySqlStorageContext<ChatSession>>();
+                services.AddTransient<IStorageContext<ChatMessage>, MySqlStorageContext<ChatMessage>>();
+                services.AddTransient<IStorageContext<MemorySource>, MySqlStorageContext<MemorySource>>();
+                services.AddTransient<IStorageContext<ChatParticipant>, MySqlStorageContext<ChatParticipant>>();
                 break;
             }
 
@@ -276,10 +271,10 @@ public static class CopilotChatServiceExtensions
             }
         }
 
-        services.AddSingleton<ChatSessionRepository>(new ChatSessionRepository(chatSessionStorageContext));
-        services.AddSingleton<ChatMessageRepository>(new ChatMessageRepository(chatMessageStorageContext));
-        services.AddSingleton<ChatMemorySourceRepository>(new ChatMemorySourceRepository(chatMemorySourceStorageContext));
-        services.AddSingleton<ChatParticipantRepository>(new ChatParticipantRepository(chatParticipantStorageContext));
+        services.AddTransient<ChatSessionRepository>(sp => new ChatSessionRepository(chatSessionStorageContext));
+        services.AddTransient<ChatMessageRepository>(sp => new ChatMessageRepository(chatMessageStorageContext));
+        services.AddTransient<ChatMemorySourceRepository>(sp => new ChatMemorySourceRepository(chatMemorySourceStorageContext));
+        services.AddTransient<ChatParticipantRepository>(sp => new ChatParticipantRepository(chatParticipantStorageContext));
 
         return services;
     }
