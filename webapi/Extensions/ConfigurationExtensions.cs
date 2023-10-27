@@ -3,6 +3,8 @@
 using System;
 using System.Reflection;
 using Azure.Identity;
+using DotNetEnv;
+using DotNetEnv.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -29,6 +31,7 @@ internal static class ConfigExtensions
                 optional: true,
                 reloadOnChange: true);
 
+            configBuilder.AddDotNetEnv(".env", LoadOptions.TraversePath());
             configBuilder.AddEnvironmentVariables();
 
             configBuilder.AddUserSecrets(

@@ -122,6 +122,27 @@ public class ChatMessage : IStorageEntity
     [JsonIgnore]
     public string Partition => this.ChatId;
 
+    // EF Core requires a parameterless constructor.
+    public ChatMessage(
+        string userId,
+        string userName,
+        string chatId,
+        string content,
+        string? prompt = null,
+        AuthorRoles authorRole = AuthorRoles.User,
+        ChatMessageType type = ChatMessageType.Message)
+    {
+        this.Timestamp = DateTimeOffset.Now;
+        this.UserId = userId;
+        this.UserName = userName;
+        this.ChatId = chatId;
+        this.Content = content;
+        this.Id = Guid.NewGuid().ToString();
+        this.Prompt = prompt ?? string.Empty;
+        this.AuthorRole = authorRole;
+        this.Type = type;
+    }
+
     /// <summary>
     /// Create a new chat message. Timestamp is automatically generated.
     /// </summary>

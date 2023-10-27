@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using CopilotChat.WebApi.Models.Storage;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace CopilotChat.WebApi.Storage;
 
@@ -23,5 +24,14 @@ public class MySqlDbContext : DbContext
                 v => JsonConvert.SerializeObject(v),
                 v => JsonConvert.DeserializeObject<Dictionary<string, int>>(v))
             .HasMaxLength(5000);
+
+        modelBuilder.Entity<ChatSession>()
+            .Property(e => e.EnabledPlugins)
+            .HasConversion(
+                v => JsonConvert.SerializeObject(v),
+                v => JsonConvert.DeserializeObject<HashSet<string>>(v))
+            .HasMaxLength(5000);
+
+        modelBuilder.Ignore<CitationSource>();
     }
 }
