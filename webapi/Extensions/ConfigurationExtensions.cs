@@ -3,6 +3,8 @@
 using System;
 using System.Reflection;
 using Azure.Identity;
+using DotNetEnv;
+using DotNetEnv.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -28,6 +30,16 @@ internal static class ConfigExtensions
                 path: $"appsettings.{environment}.json",
                 optional: true,
                 reloadOnChange: true);
+
+            configBuilder.AddDotNetEnv(".env", LoadOptions.TraversePath());
+
+            // Log the configuration values
+            var config = configBuilder.Build();
+            foreach (var pair in config.AsEnumerable())
+            {
+                Console.WriteLine($"{pair.Key}={pair.Value}");
+            }
+
 
             configBuilder.AddEnvironmentVariables();
 
